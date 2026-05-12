@@ -1,0 +1,6 @@
+interface:
+  display_name: "BOPPS PPT"
+  short_description: "从教案生成 OBE+BOPPPS 美化课件"
+  default_prompt: "Use $bopps-ppt to convert a course lesson plan into an OBE and BOPPPS teaching PPT."
+policy:
+  allow_implicit_invocation: true
