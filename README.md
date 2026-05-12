@@ -4,6 +4,14 @@
 
 它的重点不是简单排版，而是先按 OBE 思路梳理教学目标，再用 BOPPPS 组织课堂过程，最后生成适合上课直接使用的 PPTX。
 
+## 本次课程示例
+
+这个仓库里的命令和示例使用的课程主题是 `实现分页`。
+
+`实现分页` 是本次课程要用的课题，主要面向 Web 程序设计中的列表分页功能。README 里的 `实现分页.md` 和 `实现分页-OBE-BOPPPS.pptx` 都是围绕这个主题写的。
+
+其他课程使用时，把文件名、标题和示例内容换成自己的课程主题即可。
+
 ## 适合做什么
 
 - 把 DOCX 教案改成课堂课件
@@ -74,6 +82,8 @@ npm install pptxgenjs
 ```powershell
 node scripts\generate_bopps_ppt.js ".\实现分页.md" ".\实现分页-OBE-BOPPPS.pptx"
 ```
+
+这里的 `实现分页` 是本仓库的课程示例名称。你可以替换成自己的 Markdown 文件名和 PPTX 输出文件名。
 
 命令格式如下。
 
@@ -233,4 +243,6 @@ npm install pptxgenjs
 
 ## 许可证
 
-如果你要公开分发或二次开发，建议在仓库中补充明确的开源许可证文件。
+本项目采用 GNU General Public License v3.0 许可证。
+
+完整许可证文本见 `LICENSE`。
