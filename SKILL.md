@@ -25,6 +25,8 @@ Use OBE first, then BOPPPS.
 - Keep PPT text large. Prefer title 30+, body 21+, table 14+, code 14+.
 - Split dense content into more slides instead of shrinking text.
 - Make the right-side badge show the BOPPPS stage, not generic labels such as 实战、任务、项目、课程.
+- Add a horizontal BOPPPS navigation bar to every generated slide so the whole teaching process stays visible.
+- The navigation bar must show 导入、目标、前测、参与学习、后测、总结 in order and highlight the current stage.
 
 Right-side badge labels must use these words when possible:
 
@@ -84,6 +86,7 @@ If `pptxgenjs` is missing, install it in the project or use the project dependen
 - For long code, split by 12 to 16 lines per slide.
 - For long tables, split rows across slides.
 - Keep the footer simple with course name and page number.
+- Keep the BOPPPS navigation bar visible across the deck and highlight the active teaching stage.
 - Use BOPPPS stage badges on the right side.
 
 ## BOPPPS Stage Mapping

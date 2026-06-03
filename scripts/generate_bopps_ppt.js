@@ -38,6 +38,9 @@ const palette = {
   greenSoft: 'ECFDF5',
   amberSoft: 'FFF7ED',
   redSoft: 'FEF2F2',
+  indigo: '4F46E5',
+  indigoSoft: 'EEF2FF',
+  slateSoft: 'F1F5F9',
   codeBg: '111827',
   codeText: 'E5E7EB',
 };
@@ -46,6 +49,22 @@ const fonts = {
   title: 'Microsoft YaHei',
   body: 'Microsoft YaHei',
   mono: 'Consolas',
+};
+
+const boppsStages = [
+  { label: '导入', color: palette.blue, soft: palette.blueSoft },
+  { label: '目标', color: palette.teal, soft: palette.greenSoft },
+  { label: '前测', color: palette.amber, soft: palette.amberSoft },
+  { label: '参与学习', color: palette.indigo, soft: palette.indigoSoft },
+  { label: '后测', color: palette.red, soft: palette.redSoft },
+  { label: '总结', color: palette.slate, soft: palette.slateSoft },
+];
+
+const contentBox = {
+  x: 0.72,
+  y: 1.72,
+  w: 11.86,
+  h: 4.96,
 };
 
 function usage() {
@@ -149,7 +168,7 @@ function blockWeight(block) {
   return block.text.length > 30 ? 1.6 : 1;
 }
 
-function chunkTextBlocks(blocks, maxWeight = 10.2) {
+function chunkTextBlocks(blocks, maxWeight = 9.6) {
   const chunks = [];
   let current = [];
   let weight = 0;
@@ -171,7 +190,7 @@ function chunkCodeLines(lines) {
   const cleaned = [...lines];
   while (cleaned.length && !cleaned[cleaned.length - 1].trim()) cleaned.pop();
   const chunks = [];
-  for (let i = 0; i < cleaned.length; i += 16) chunks.push(cleaned.slice(i, i + 16));
+  for (let i = 0; i < cleaned.length; i += 15) chunks.push(cleaned.slice(i, i + 15));
   return chunks.length ? chunks : [[]];
 }
 
@@ -202,7 +221,7 @@ function createPlan(slides) {
     }
 
     if (textBlocks.length) {
-      chunkTextBlocks(textBlocks, 8.4).forEach((chunk, idx) => {
+      chunkTextBlocks(textBlocks, 7.9).forEach((chunk, idx) => {
         plan.push({ kind: 'text', title: idx === 0 ? slide.title : `${slide.title} 要点`, blocks: chunk });
       });
     }
@@ -223,13 +242,64 @@ function createPlan(slides) {
   return plan;
 }
 
+function stageByLabel(label) {
+  return boppsStages.find((stage) => stage.label === label) || boppsStages[3];
+}
+
 function boppsStage(title) {
-  if (/Bridge-in|导入|项目先行|项目运行|课程基本|学情分析/.test(title)) return { label: '导入', color: palette.blue, soft: palette.blueSoft };
-  if (/Objective|目标|OBE|学习成果|布鲁姆|评价方式|重点|难点|BOPPPS 时间/.test(title)) return { label: '目标', color: palette.teal, soft: palette.greenSoft };
-  if (/Pre-assessment|前测/.test(title)) return { label: '前测', color: palette.amber, soft: palette.amberSoft };
-  if (/Post-assessment|后测|验收|Rubrics/.test(title)) return { label: '后测', color: palette.red, soft: palette.redSoft };
-  if (/Summary|总结|作业|拓展|反思/.test(title)) return { label: '总结', color: palette.teal, soft: palette.greenSoft };
-  return { label: '参与学习', color: palette.blue, soft: palette.blueSoft };
+  if (/Bridge-in|导入|项目先行|项目运行|课程基本|学情分析/.test(title)) return stageByLabel('导入');
+  if (/Objective|目标|OBE|学习成果|布鲁姆|评价方式|重点|难点|BOPPPS 时间/.test(title)) return stageByLabel('目标');
+  if (/Pre-assessment|前测/.test(title)) return stageByLabel('前测');
+  if (/Post-assessment|后测|验收|Rubrics/.test(title)) return stageByLabel('后测');
+  if (/Summary|总结|作业|拓展|反思/.test(title)) return stageByLabel('总结');
+  return stageByLabel('参与学习');
+}
+
+function addBoppsNavigation(slide, currentStage, options = {}) {
+  const x = options.x ?? 0.65;
+  const y = options.y ?? 1.17;
+  const w = options.w ?? 11.5;
+  const h = options.h ?? 0.32;
+  const gap = options.gap ?? 0.06;
+  const segmentW = (w - gap * (boppsStages.length - 1)) / boppsStages.length;
+  const centerY = y + h / 2;
+  const isCover = options.variant === 'cover';
+
+  if (!isCover) {
+    slide.addShape(ShapeType.line, {
+      x: x + segmentW / 2, y: centerY, w: w - segmentW, h: 0,
+      line: { color: palette.line, pt: 1.1 },
+    });
+  }
+
+  boppsStages.forEach((navStage, idx) => {
+    const active = currentStage?.label === navStage.label;
+    const segX = x + idx * (segmentW + gap);
+    const colorStage = active || isCover;
+    const fillColor = colorStage ? navStage.color : palette.panel;
+    const lineColor = colorStage ? navStage.color : palette.line;
+    const textColor = colorStage ? 'FFFFFF' : palette.slate;
+
+    slide.addShape(ShapeType.roundRect, {
+      x: segX, y, w: segmentW, h, rectRadius: 0.05,
+      line: { color: lineColor, pt: active ? 1.1 : 0.7 },
+      fill: { color: fillColor },
+    });
+
+    if (!colorStage) {
+      slide.addShape(ShapeType.rect, {
+        x: segX, y, w: segmentW, h: 0.04,
+        line: { color: navStage.color, transparency: 100 },
+        fill: { color: navStage.color },
+      });
+    }
+
+    slide.addText(navStage.label, {
+      x: segX, y: y + 0.075, w: segmentW, h: 0.16,
+      fontFace: fonts.body, fontSize: 10.4, bold: colorStage,
+      color: textColor, align: 'center', margin: 0, fit: 'shrink',
+    });
+  });
 }
 
 function addBase(slide, stage, pageNo, total) {
@@ -252,7 +322,8 @@ function addHeader(slide, title, stage) {
   slide.addText(stage.label, {
     x: 10.78, y: 0.62, w: 1.35, h: 0.18, fontFace: fonts.body, fontSize: 12, bold: true, color: stage.color, align: 'center', margin: 0,
   });
-  slide.addShape(ShapeType.line, { x: 0.65, y: 1.25, w: 11.5, h: 0, line: { color: stage.color, pt: 1.4 } });
+  addBoppsNavigation(slide, stage);
+  slide.addShape(ShapeType.line, { x: 0.65, y: 1.58, w: 11.5, h: 0, line: { color: stage.color, pt: 1.2 } });
 }
 
 function addCover(pptx, deckTitle) {
@@ -263,7 +334,7 @@ function addCover(pptx, deckTitle) {
   slide.addShape(ShapeType.rect, { x: 0, y: 6.92, w: W, h: 0.2, line: { color: palette.teal, transparency: 100 }, fill: { color: palette.teal } });
   slide.addText(deckTitle || 'OBE + BOPPPS 教学课件', { x: 0.95, y: 1.38, w: 9.6, h: 0.8, fontFace: fonts.title, fontSize: 44, bold: true, color: 'FFFFFF', margin: 0, fit: 'shrink' });
   slide.addText('OBE + BOPPPS 教学课件', { x: 0.98, y: 2.38, w: 9.8, h: 0.35, fontFace: fonts.body, fontSize: 20, color: 'DBEAFE', margin: 0 });
-  slide.addText('导入  目标  前测  参与学习  后测  总结', { x: 0.98, y: 3.02, w: 8.8, h: 0.3, fontFace: fonts.body, fontSize: 18, color: 'BFDBFE', margin: 0 });
+  addBoppsNavigation(slide, null, { x: 0.98, y: 3.02, w: 9.4, h: 0.34, variant: 'cover' });
 }
 
 function addTextSlide(pptx, item, index, total) {
@@ -271,9 +342,9 @@ function addTextSlide(pptx, item, index, total) {
   const slide = pptx.addSlide();
   addBase(slide, stage, index + 1, total);
   addHeader(slide, item.title, stage);
-  slide.addShape(ShapeType.roundRect, { x: 0.72, y: 1.55, w: 11.86, h: 5.12, rectRadius: 0.06, line: { color: palette.line, pt: 1 }, fill: { color: palette.panel } });
+  slide.addShape(ShapeType.roundRect, { ...contentBox, rectRadius: 0.06, line: { color: palette.line, pt: 1 }, fill: { color: palette.panel } });
 
-  let y = 1.86;
+  let y = contentBox.y + 0.31;
   item.blocks.forEach((block) => {
     if (block.type === 'bullet') {
       slide.addShape(ShapeType.rect, { x: 1.05, y: y + 0.12, w: 0.13, h: 0.13, line: { color: stage.color, transparency: 100 }, fill: { color: stage.color } });
@@ -307,8 +378,8 @@ function addTableSlide(pptx, item, index, total) {
       border: { type: 'solid', color: palette.line, pt: 0.7 }, breakLine: false,
     },
   })));
-  const rowH = Math.min(0.74, 5.1 / rows.length);
-  slide.addTable(rows, { x: 0.72, y: 1.58, w: 11.85, h: rowH * rows.length, colW: estimateColWidths(item.rows), rowH: Array(rows.length).fill(rowH), border: { type: 'solid', color: palette.line, pt: 0.7 } });
+  const rowH = Math.min(0.68, contentBox.h / rows.length);
+  slide.addTable(rows, { x: contentBox.x, y: contentBox.y + 0.03, w: 11.85, h: rowH * rows.length, colW: estimateColWidths(item.rows), rowH: Array(rows.length).fill(rowH), border: { type: 'solid', color: palette.line, pt: 0.7 } });
 }
 
 function addCodeSlide(pptx, item, index, total) {
@@ -317,12 +388,12 @@ function addCodeSlide(pptx, item, index, total) {
   addBase(slide, stage, index + 1, total);
   addHeader(slide, item.title, stage);
   const lang = item.language ? item.language.toUpperCase() : 'CODE';
-  slide.addShape(ShapeType.roundRect, { x: 0.72, y: 1.5, w: 11.86, h: 5.2, rectRadius: 0.05, line: { color: palette.codeBg, transparency: 100 }, fill: { color: palette.codeBg } });
-  slide.addShape(ShapeType.rect, { x: 0.72, y: 1.5, w: 11.86, h: 0.42, line: { color: stage.color, transparency: 100 }, fill: { color: stage.color } });
-  slide.addText(lang, { x: 0.98, y: 1.62, w: 1.7, h: 0.18, fontFace: fonts.body, fontSize: 11.5, bold: true, color: 'FFFFFF', margin: 0 });
+  slide.addShape(ShapeType.roundRect, { ...contentBox, rectRadius: 0.05, line: { color: palette.codeBg, transparency: 100 }, fill: { color: palette.codeBg } });
+  slide.addShape(ShapeType.rect, { x: contentBox.x, y: contentBox.y, w: contentBox.w, h: 0.42, line: { color: stage.color, transparency: 100 }, fill: { color: stage.color } });
+  slide.addText(lang, { x: 0.98, y: contentBox.y + 0.12, w: 1.7, h: 0.18, fontFace: fonts.body, fontSize: 11.5, bold: true, color: 'FFFFFF', margin: 0 });
   const longest = item.lines.reduce((m, line) => Math.max(m, line.length), 0);
   const fontSize = longest > 92 ? 13.8 : longest > 72 ? 14.2 : 15;
-  slide.addText(item.lines.join('\n'), { x: 0.98, y: 2.08, w: 11.28, h: 4.34, fontFace: fonts.mono, fontSize, color: palette.codeText, margin: 0.08, breakLine: false, fit: 'shrink', valign: 'top' });
+  slide.addText(item.lines.join('\n'), { x: 0.98, y: contentBox.y + 0.58, w: 11.28, h: contentBox.h - 0.84, fontFace: fonts.mono, fontSize, color: palette.codeText, margin: 0.08, breakLine: false, fit: 'shrink', valign: 'top' });
 }
 
 async function build() {

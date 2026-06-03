@@ -17,5 +17,6 @@ Use this reference when explaining the method behind the skill.
 3. PPTX generation
    - Use `pptxgenjs` to build an editable PowerPoint.
    - Split text, tables, and code to protect readable font sizes.
+   - Add a persistent BOPPPS navigation bar and highlight the current stage on every slide.
    - Use BOPPPS stage badges on the right side.
    - Validate slide count and font sizes from the PPTX XML.
